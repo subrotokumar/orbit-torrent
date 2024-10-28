@@ -1,6 +1,12 @@
 package app
 
-import "log"
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"github.com/subrotokumar/orbit-torrent/internal/bencode"
+)
 
 type App struct {
 }
@@ -10,17 +16,38 @@ func NewApp() *App {
 }
 
 func (app *App) Run() {
+	command := os.Args[1]
+	switch command {
+	case "decode":
+		bencodedValue := os.Args[2]
+		app.Decode(bencodedValue)
+	case "info":
+		path := os.Args[2]
+		data, err := os.ReadFile(path)
+		fmt.Println(string(data))
+		if err != nil {
+			fmt.Println("unable to read file")
+			fmt.Println(err)
+			return
+		}
+		app.Decode(string(data))
+	default:
+		fmt.Println("Unknown command: " + command)
+	}
 }
 
-func (app *App) Logo() {
-	banner := `                                                                                                                                                 
-     .oooooo.              .o8          o8o       .   
-    d8P'  'Y8b             "888         '"'     .o8   
-   888      888  oooo d8b   888oooo.   oooo   .o888oo 
-   888      888  '888""8P   d88' '88b  '888     888   
-   888      888   888       888   888   888     888   
-   '88b    d88'   888       888   888   888     888 . 
-    'Y8bood8P'   d888b      'Y8bod8P'  o888o    "888" 																																									
-	`
-	log.Println(banner)
+func (app *App) Decode(input string) {
+	bencodedString := os.Args[2]
+	decoded, _, err := bencode.Decode(bencodedString, 0)
+	if err != nil {
+		fmt.Println("Error decoding input")
+		fmt.Println(err.Error())
+		return
+	}
+	jsonOutput, _ := json.Marshal(decoded)
+	fmt.Println(string(jsonOutput))
+}
+
+func (app *App) Encode() {
+
 }
