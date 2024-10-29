@@ -3,6 +3,7 @@ package bencode
 import (
 	"fmt"
 	"io"
+	"unicode/utf8"
 )
 
 func Decode(bencodedString string, start int) (interface{}, int, error) {
@@ -39,11 +40,11 @@ func DecodeList(bencodedString string, start int) (result []interface{}, index i
 			return nil, start, fmt.Errorf("bad list")
 		}
 		if bencodedString[index] == 'e' {
+			index++
 			break
 		}
 		var x interface{}
 		x, index, err = Decode(bencodedString, index)
-		fmt.Printf("%v %d\n", x, index)
 		if err != nil {
 			return nil, index, err
 		}
@@ -57,8 +58,7 @@ func DecodeList(bencodedString string, start int) (result []interface{}, index i
 //
 // For example, 42 is encoded as i42e and -42 is encoded as i-42e.
 func DecodeInteger(bencodedString string, start int) (int, int, error) {
-	index := start
-	index++
+	index := start + 1
 
 	isNegetive := false
 	if bencodedString[index] == '-' {
@@ -67,7 +67,7 @@ func DecodeInteger(bencodedString string, start int) (int, int, error) {
 	}
 
 	result := 0
-	for bencodedString[index] >= '0' && bencodedString[index] <= '9' {
+	for index < len(bencodedString) && bencodedString[index] >= '0' && bencodedString[index] <= '9' {
 		result = result*10 + int(bencodedString[index]-'0')
 		index++
 	}
@@ -89,24 +89,38 @@ func DecodeInteger(bencodedString string, start int) (int, int, error) {
 //
 // For example, the string "hello" is encoded as "5:hello".
 func DecodeString(bencodedString string, start int) (string, int, error) {
+	runes := []rune(bencodedString)
 	index := start
-
 	length := 0
-	for index < len(bencodedString) && bencodedString[index] >= '0' && bencodedString[index] <= '9' {
-		length = length*10 + (int(bencodedString[index]) - '0')
+	for index < len(runes) && runes[index] >= '0' && runes[index] <= '9' {
+		length = length*10 + (int(runes[index]) - '0')
 		index++
 	}
 
-	if index == len(bencodedString) || bencodedString[index] != ':' {
+	if index == len(runes) || runes[index] != ':' {
 		return "", start, fmt.Errorf("bad string")
 	}
 	index++
 
-	if index+length > len(bencodedString) {
+	if index+length > len(runes) {
 		return "", start, fmt.Errorf("bad string: out of bounds")
 	}
 
-	result := bencodedString[index : index+length]
+	result := string(runes[index : index+length])
+	normalizeString := func(input string) string {
+		var result []rune
+
+		for _, r := range input {
+			if r == '\ufffd' || !utf8.ValidRune(r) {
+				result = append(result, '\ufffd') // Replace with Unicode replacement character
+			} else {
+				result = append(result, r)
+			}
+		}
+
+		return string(result)
+	}
+	result = normalizeString(result)
 	index += length
 	return string(result), index, nil
 }
@@ -115,14 +129,14 @@ func DecodeString(bencodedString string, start int) (string, int, error) {
 //
 // For example, {"hello": 52, "foo":"bar"} would be encoded as: d3:foo3:bar5:helloi52ee (note that the keys were reordered).
 func DecodeDict(bencodedString string, start int) (result map[string]interface{}, index int, err error) {
-	index = start
-	index++ // 'd'
+	index = start + 1
 	result = make(map[string]interface{})
 	for {
 		if index >= len(bencodedString) {
 			return nil, start, fmt.Errorf("bad list")
 		}
 		if bencodedString[index] == 'e' {
+			index++
 			break
 		}
 
@@ -140,6 +154,7 @@ func DecodeDict(bencodedString string, start int) (result map[string]interface{}
 		if err != nil {
 			return nil, index, err
 		}
+		fmt.Printf("%s = %v", key, val)
 		result[keys] = val
 	}
 	return result, index, nil

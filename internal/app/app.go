@@ -17,20 +17,14 @@ func NewApp() *App {
 
 func (app *App) Run() {
 	command := os.Args[1]
+	param := os.Args[2]
 	switch command {
 	case "decode":
-		bencodedValue := os.Args[2]
-		app.Decode(bencodedValue)
+		app.Decode(param)
 	case "info":
-		path := os.Args[2]
-		data, err := os.ReadFile(path)
-		fmt.Println(string(data))
-		if err != nil {
-			fmt.Println("unable to read file")
-			fmt.Println(err)
-			return
-		}
-		app.Decode(string(data))
+		app.Info(param)
+	case "peers":
+		app.peers(param)
 	default:
 		fmt.Println("Unknown command: " + command)
 	}
@@ -44,10 +38,6 @@ func (app *App) Decode(input string) {
 		fmt.Println(err.Error())
 		return
 	}
-	jsonOutput, _ := json.Marshal(decoded)
+	jsonOutput, _ := json.MarshalIndent(decoded, "", " ")
 	fmt.Println(string(jsonOutput))
-}
-
-func (app *App) Encode() {
-
 }
