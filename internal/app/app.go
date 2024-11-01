@@ -1,43 +1,32 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/subrotokumar/orbit-torrent/internal/bencode"
+	"github.com/spf13/cobra"
 )
 
 type App struct {
+	version string
+	cmd     *cobra.Command
 }
 
-func NewApp() *App {
-	return &App{}
+func NewApp(version string) *App {
+	var rootCmd *cobra.Command = &cobra.Command{
+		Short: "Orbit - A lightweight BitTorrent client",
+		Long:  banner(),
+	}
+	return &App{cmd: rootCmd, version: version}
 }
 
 func (app *App) Run() {
-	command := os.Args[1]
-	param := os.Args[2]
-	switch command {
-	case "decode":
-		app.Decode(param)
-	case "info":
-		app.Info(param)
-	case "peers":
-		app.peers(param)
-	default:
-		fmt.Println("Unknown command: " + command)
+	app.RegisterVersionCmd()
+	app.RegisterDecodeCmd()
+	app.RegisterInfoCmd()
+	app.RegisterPeersCmd()
+	if err := app.cmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Oops. An error while executing Zero '%s'\n", err)
+		os.Exit(1)
 	}
-}
-
-func (app *App) Decode(input string) {
-	bencodedString := os.Args[2]
-	decoded, _, err := bencode.Decode(bencodedString, 0)
-	if err != nil {
-		fmt.Println("Error decoding input")
-		fmt.Println(err.Error())
-		return
-	}
-	jsonOutput, _ := json.MarshalIndent(decoded, "", " ")
-	fmt.Println(string(jsonOutput))
 }

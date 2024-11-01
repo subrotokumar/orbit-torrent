@@ -3,7 +3,6 @@ package bencode
 import (
 	"fmt"
 	"io"
-	"unicode/utf8"
 )
 
 func Decode(bencodedString string, start int) (interface{}, int, error) {
@@ -107,20 +106,20 @@ func DecodeString(bencodedString string, start int) (string, int, error) {
 	}
 
 	result := string(runes[index : index+length])
-	normalizeString := func(input string) string {
-		var result []rune
 
-		for _, r := range input {
-			if r == '\ufffd' || !utf8.ValidRune(r) {
-				result = append(result, '\ufffd') // Replace with Unicode replacement character
-			} else {
-				result = append(result, r)
-			}
-		}
+	// normalizeString := func(input string) string {
+	// 	var result []rune
+	// 	for _, r := range input {
+	// 		if r == '\ufffd' || !utf8.ValidRune(r) {
+	// 			result = append(result, '\ufffd') // Replace with Unicode replacement character
+	// 		} else {
+	// 			result = append(result, r)
+	// 		}
+	// 	}
+	// 	return string(result)
+	// }
+	// result = normalizeString(result)
 
-		return string(result)
-	}
-	result = normalizeString(result)
 	index += length
 	return string(result), index, nil
 }

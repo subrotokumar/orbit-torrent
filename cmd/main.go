@@ -5,7 +5,6 @@ import (
 )
 
 func main() {
-	app := &app.App{}
-	app.Banner()
+	app := app.NewApp("v0.0.1")
 	app.Run()
 }
