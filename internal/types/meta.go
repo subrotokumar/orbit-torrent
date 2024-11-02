@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackpal/bencode-go"
+	"github.com/subrotokumar/orbit-torrent/internal/console"
 	"github.com/subrotokumar/orbit-torrent/internal/utility"
 )
 
@@ -20,12 +21,12 @@ type MetaInfo struct {
 	Pieces      string `bencode:"pieces"`
 }
 
-func (m *Meta) GetInfoHash() ([]byte, error) {
+func (m *Meta) GetInfoHash() []byte {
 	h := sha1.New()
 	if err := bencode.Marshal(h, m.Info); err != nil {
-		return nil, err
+		console.ErrorFatal(err.Error())
 	}
-	return h.Sum(nil), nil
+	return h.Sum(nil)
 }
 
 func (meta *Meta) GetPieceHashes() [][20]byte {
@@ -47,11 +48,7 @@ func (m *Meta) DisplayInfoHash() {
 	fmt.Println("Tracker URL:", m.Announce)
 	fmt.Println("Length:", m.Info.Length)
 
-	infoHash, err := m.GetInfoHash()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	infoHash := m.GetInfoHash()
 	fmt.Printf("Info Hash: %x\n", infoHash)
 }
 

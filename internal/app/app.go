@@ -25,6 +25,7 @@ func (app *App) Run() {
 	app.RegisterDecodeCmd()
 	app.RegisterInfoCmd()
 	app.RegisterPeersCmd()
+	app.RegisterHandshakeCmd()
 	if err := app.cmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Oops. An error while executing Zero '%s'\n", err)
 		os.Exit(1)

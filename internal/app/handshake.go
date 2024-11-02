@@ -1,45 +1,34 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/subrotokumar/orbit-torrent/internal/console"
-	"github.com/subrotokumar/orbit-torrent/internal/peers"
 )
 
-func PeersCommandRun(file string) {
+func HandshakeCommandRun(file string, peerAddress string) {
 	result := GetTorrentMeta(file)
 	infoHash := result.GetInfoHash()
-
-	peers, err := peers.DiscoverPeers(peers.Param{
-		Tracker:    result.Announce,
-		InfoHash:   infoHash,
-		Port:       "6881",
-		FileLength: result.Info.Length,
-	})
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fmt.Println("Peers:")
-	for _, val := range peers {
-		fmt.Println("\t", val)
-	}
+	RunHandshake(peerAddress, infoHash)
 }
 
-func (app *App) RegisterPeersCmd() {
+func (app *App) RegisterHandshakeCmd() {
 	cmd := &cobra.Command{
-		Use:   "peers",
+		Use:   "handshake",
 		Short: "Get peers into of torrent file",
 		Run: func(cmd *cobra.Command, args []string) {
 			file, err := cmd.Flags().GetString("file")
 			if err != nil {
 				console.ErrorFatal(err.Error())
 			}
-			PeersCommandRun(file)
+			peerAddress, err := cmd.Flags().GetString("peerAddress")
+			if err != nil {
+				console.ErrorFatal(err.Error())
+			}
+			HandshakeCommandRun(file, peerAddress)
 		},
 	}
 	app.cmd.AddCommand(cmd)
 	cmd.Flags().StringP("file", "f", "", "Path of the torrent file")
+	cmd.Flags().StringP("peerAddress", "p", "", "Peer ID")
+
 }

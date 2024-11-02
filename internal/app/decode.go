@@ -32,6 +32,6 @@ func (app *App) RegisterDecodeCmd() {
 		Run:   DecodeCommand,
 	}
 	app.cmd.AddCommand(cmd)
-	cmd.Flags().StringP("input", "i", "", "input bencoded string")
+	cmd.Flags().StringP("input", "i", "", "Input bencoded string")
 
 }
